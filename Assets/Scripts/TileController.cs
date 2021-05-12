@@ -26,6 +26,8 @@ public class TileController : MonoBehaviour
 
     private bool isSelected = false;
 
+    private GameFlowManager game;
+
     public bool IsDestroyed { get; private set; }
 
 
@@ -33,6 +35,7 @@ public class TileController : MonoBehaviour
     {
         board = BoardManager.Instance;
         render = GetComponent<SpriteRenderer>();
+        game = GameFlowManager.Instance;
     }
 
     private void Start()
@@ -45,7 +48,7 @@ public class TileController : MonoBehaviour
     private void OnMouseDown()
     {
         // Non Selectable conditions
-        if (render.sprite == null || board.IsAnimating)
+        if (render.sprite == null || board.IsAnimating || game.IsGameOver)
         {
             return;
         }
@@ -76,7 +79,6 @@ public class TileController : MonoBehaviour
                     {
                         if (board.GetAllMatches().Count > 0)
                         {
-                            Debug.Log("MATCH FOUND");
                             board.Process();
                         }
                         else
