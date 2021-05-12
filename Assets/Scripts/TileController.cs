@@ -20,6 +20,8 @@ public class TileController : MonoBehaviour
 
     private bool isSelected = false;
 
+    public bool IsDestroyed { get; private set; }
+
 
     private void Awake()
     {
@@ -55,10 +57,18 @@ public class TileController : MonoBehaviour
                 {
                     TileController otherTile = previousSelected;
                     previousSelected.Deselect();
+
                     // swap tile
                     SwapTile(otherTile, () =>
                     {
-                        SwapTile(otherTile);
+                        if (board.GetAllMatches().Count > 0)
+                        {
+                            Debug.Log("MATCH FOUND");
+                        }
+                        else
+                        {
+                            SwapTile(otherTile);
+                        }
                     });
                 }
                 // if not adjecent then change selected
@@ -118,6 +128,80 @@ public class TileController : MonoBehaviour
         }
 
         return adjacentTiles;
+    }
+
+    #endregion
+
+    #region Check Match
+
+    private List<TileController> GetMatch(Vector2 castDir)
+    {
+        List<TileController> matchingTiles = new List<TileController>();
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, castDir, render.size.x);
+
+        while (hit)
+        {
+            TileController otherTile = hit.collider.GetComponent<TileController>();
+            if (otherTile.id != id || otherTile.IsDestroyed)
+            {
+                break;
+            }
+
+            matchingTiles.Add(otherTile);
+            hit = Physics2D.Raycast(otherTile.transform.position, castDir, render.size.x);
+        }
+
+        return matchingTiles;
+    }
+
+    private List<TileController> GetOneLineMatch(Vector2[] paths)
+    {
+        List<TileController> matchingTiles = new List<TileController>();
+
+        for (int i = 0; i < paths.Length; i++)
+        {
+            matchingTiles.AddRange(GetMatch(paths[i]));
+        }
+
+        // only match when more than 2 (3 with itself) in one line
+        if (matchingTiles.Count >= 2)
+        {
+            return matchingTiles;
+        }
+
+        return null;
+    }
+
+    public List<TileController> GetAllMatches()
+    {
+        if (IsDestroyed)
+        {
+            return null;
+        }
+
+        List<TileController> matchingTiles = new List<TileController>();
+
+        // get matches for horizontal and vertical
+        List<TileController> horizontalMatchingTiles = GetOneLineMatch(new Vector2[2] { Vector2.up, Vector2.down });
+        List<TileController> verticalMatchingTiles = GetOneLineMatch(new Vector2[2] { Vector2.left, Vector2.right });
+
+        if (horizontalMatchingTiles != null)
+        {
+            matchingTiles.AddRange(horizontalMatchingTiles);
+        }
+
+        if (verticalMatchingTiles != null)
+        {
+            matchingTiles.AddRange(verticalMatchingTiles);
+        }
+
+        // add itself to matched tiles if match found
+        if (matchingTiles != null && matchingTiles.Count >= 2)
+        {
+            matchingTiles.Add(this);
+        }
+
+        return matchingTiles;
     }
 
     #endregion
