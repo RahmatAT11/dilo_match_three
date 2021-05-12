@@ -103,11 +103,19 @@ public class BoardManager : MonoBehaviour
     {
         get
         {
-            return IsSwapping;
+            return IsProcessing || IsSwapping;
         }
     }
 
+    public bool IsProcessing { get; set; }
+
     public bool IsSwapping { get; set; }
+
+    public void Process()
+    {
+        IsProcessing = true;
+        ProcessMatches();
+    }
 
     #region Swapping
 
@@ -138,6 +146,52 @@ public class BoardManager : MonoBehaviour
     }
 
     #endregion
+
+    #region Match
+
+    private void ProcessMatches()
+    {
+        List<TileController> matchingTiles = GetAllMatches();
+
+        // stop locking if no match found
+        if (matchingTiles == null || matchingTiles.Count == 0)
+        {
+            IsProcessing = false;
+            return;
+        }
+    }
+
+    private IEnumerator ClearMatches(List<TileController> matchingTiles, System.Action onCompleted)
+    {
+        List<bool> isCompleted = new List<bool>();
+
+        for (int i = 0; i < matchingTiles.Count; i++)
+        {
+            isCompleted.Add(false);
+        }
+
+        for (int i = 0; i < matchingTiles.Count; i++)
+        {
+            int index = i;
+            StartCoroutine(matchingTiles[i].SetDestroyed(() => { isCompleted[index] = true; }));
+        }
+
+        yield return new WaitUntil(() => { return IsAllTrue(isCompleted); });
+
+        onCompleted?.Invoke();
+    }
+
+    #endregion
+
+    public bool IsAllTrue(List<bool> list)
+    {
+        foreach (bool status in list)
+        {
+            if (!status) return false;
+        }
+
+        return true;
+    }
 
     public Vector2Int GetTileIndex(TileController tile)
     {
