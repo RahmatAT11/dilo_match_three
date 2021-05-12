@@ -228,6 +228,14 @@ public class TileController : MonoBehaviour
         name = "TILE_" + id + "(" + x + "," + y + ")";
     }
 
+    public void GenerateRandomTile(int x, int y)
+    {
+        transform.localScale = sizeNormal;
+        IsDestroyed = false;
+
+        ChangeId(Random.Range(0, board.tileTypes.Count), x, y);
+    }
+
     public IEnumerator MoveTilePosition(Vector2 targetPosition, System.Action onCompleted)
     {
         Vector2 startPosition = transform.position;
