@@ -47,7 +47,7 @@ public class BoardManager : MonoBehaviour
     private void Start()
     {
         Vector2 tileSize = tilePrefab.GetComponent<SpriteRenderer>().size;
-
+        CreateBoard(tileSize);
     }
 
     private void CreateBoard(Vector2 tileSize)
@@ -67,7 +67,35 @@ public class BoardManager : MonoBehaviour
                     ((tileSize.x + offsetTile.x) * x), startPosition.y + ((tileSize.y + offsetTile.y) * y)),
                     tilePrefab.transform.rotation, transform).GetComponent<TileController>();
                 tiles[x, y] = newTile;
+
+                // get no tile id
+                List<int> possibleId = GetStartingPossibleIdList(x, y);
+                int newId = possibleId[Random.Range(0, possibleId.Count)];
+
+                newTile.ChangeId(newId, x, y);
             }
         }
+    }
+
+    private List<int> GetStartingPossibleIdList(int x, int y)
+    {
+        List<int> possibleId = new List<int>();
+
+        for (int i = 0; i < tileTypes.Count; i++)
+        {
+            possibleId.Add(i);
+        }
+
+        if (x > 1 && tiles[x - 1, y].id == tiles[x - 2, y].id)
+        {
+            possibleId.Remove(tiles[x - 1, y].id);
+        }
+
+        if (y > 1 && tiles[x, y - 1].id == tiles[x, y - 2].id)
+        {
+            possibleId.Remove(tiles[x, y - 1].id);
+        }
+
+        return possibleId;
     }
 }
