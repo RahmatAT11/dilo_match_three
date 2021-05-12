@@ -159,6 +159,8 @@ public class BoardManager : MonoBehaviour
             IsProcessing = false;
             return;
         }
+
+        StartCoroutine(ClearMatches(matchingTiles, ProcessDrop));
     }
 
     private IEnumerator ClearMatches(List<TileController> matchingTiles, System.Action onCompleted)
@@ -177,6 +179,69 @@ public class BoardManager : MonoBehaviour
         }
 
         yield return new WaitUntil(() => { return IsAllTrue(isCompleted); });
+
+        onCompleted?.Invoke();
+    }
+
+    #endregion
+
+    #region Drop
+
+    private void ProcessDrop()
+    {
+        Dictionary<TileController, int> droppingTiles = GetAllDrop();
+    }
+
+    private Dictionary<TileController, int> GetAllDrop()
+    {
+        Dictionary<TileController, int> droppingTiles = new Dictionary<TileController, int>();
+
+        for (int x = 0; x < size.x; x++)
+        {
+            for (int y = 0; y < size.y; y++)
+            {
+                if (tiles[x, y].IsDestroyed)
+                {
+                    // process for all tile on top of destroyed tile
+                    for (int i = y + 1; i < size.y; i++)
+                    {
+                        if (tiles[x, i].IsDestroyed)
+                        {
+                            continue;
+                        }
+
+                        // if this tile already on drop list, increase its drop range
+                        if (droppingTiles.ContainsKey(tiles[x, i]))
+                        {
+                            droppingTiles[tiles[x, i]]++;
+                        }
+                        // if not on drop list, add it with drop range one
+                        else
+                        {
+                            droppingTiles.Add(tiles[x, i], 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        return droppingTiles;
+    }
+
+    private IEnumerator DropTiles(Dictionary<TileController, int> droppingTiles, System.Action onCompleted)
+    {
+        foreach (KeyValuePair<TileController, int> pair in droppingTiles)
+        {
+            Vector2Int tileIndex = GetTileIndex(pair.Key);
+
+            TileController temp = pair.Key;
+            tiles[tileIndex.x, tileIndex.y] = tiles[tileIndex.x, tileIndex.y - pair.Value];
+            tiles[tileIndex.x, tileIndex.y - pair.Value] = temp;
+
+            temp.ChangeId(temp.id, tileIndex.x, tileIndex.y - pair.Value);
+        }
+
+        yield return null;
 
         onCompleted?.Invoke();
     }
