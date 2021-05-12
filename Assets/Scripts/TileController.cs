@@ -12,6 +12,8 @@ public class TileController : MonoBehaviour
     private static readonly Color selectedColor = new Color(0.5f, 0.5f, 0.5f);
     private static readonly Color normalColor = Color.white;
 
+    private static readonly float moveDuration = 0.5f;
+
     private static TileController previousSelected = null;
 
     private bool isSelected = false;
@@ -26,7 +28,7 @@ public class TileController : MonoBehaviour
     private void OnMouseDown()
     {
         // Non Selectable conditions
-        if (render.sprite == null)
+        if (render.sprite == null || board.IsAnimating)
         {
             return;
         }
@@ -46,10 +48,23 @@ public class TileController : MonoBehaviour
 
             else
             {
-                previousSelected.Deselect();
-                Select();
+                TileController otherTile = previousSelected;
+                // swap tile
+                SwapTile(otherTile, () =>
+                {
+                    SwapTile(otherTile);
+                });
+
+                // run if cant swap (disabled for now)
+                //previousSelected.Deselect();
+                //Select();
             }
         }
+    }
+
+    public void SwapTile(TileController otherTile, System.Action onCompleted = null)
+    {
+        StartCoroutine(board.SwapTilePosition(this, otherTile, onCompleted));
     }
 
     #region Select & Deselect
@@ -76,5 +91,26 @@ public class TileController : MonoBehaviour
         this.id = id;
 
         name = "TILE_" + id + "(" + x + "," + y + ")";
+    }
+
+    public IEnumerator MoveTilePosition(Vector2 targetPosition, System.Action onCompleted)
+    {
+        Vector2 startPosition = transform.position;
+        float time = 0.0f;
+
+        // run animation on next frame for safety reason
+        yield return new WaitForEndOfFrame();
+
+        while (time < moveDuration)
+        {
+            transform.position = Vector2.Lerp(startPosition, targetPosition, time / moveDuration);
+            time += Time.deltaTime;
+
+            yield return new WaitForEndOfFrame();
+        }
+
+        transform.position = targetPosition;
+
+        onCompleted?.Invoke();
     }
 }
