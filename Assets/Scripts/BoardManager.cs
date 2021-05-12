@@ -26,6 +26,8 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private int combo;
+
     #endregion
 
     [Header("Board")]
@@ -115,6 +117,7 @@ public class BoardManager : MonoBehaviour
     {
         IsProcessing = true;
         ProcessMatches();
+        combo = 0;
     }
 
     #region Swapping
@@ -161,6 +164,10 @@ public class BoardManager : MonoBehaviour
         }
 
         StartCoroutine(ClearMatches(matchingTiles, ProcessDrop));
+
+        combo++;
+
+        ScoreManager.Instance.IncrementCurrentScore(matchingTiles.Count, combo);
     }
 
     private IEnumerator ClearMatches(List<TileController> matchingTiles, System.Action onCompleted)
