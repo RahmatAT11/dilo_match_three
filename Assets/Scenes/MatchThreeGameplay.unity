@@ -184,6 +184,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5829b7b6a66298544859b032e84e1dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tileRatio: 10
+  comboRatio: 1
 --- !u!4 &337330697
 Transform:
   m_ObjectHideFlags: 0
@@ -364,6 +366,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c11a9af75f5c45c47be47814a19ec4dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  duration: 20
 --- !u!4 &2096721740
 Transform:
   m_ObjectHideFlags: 0
